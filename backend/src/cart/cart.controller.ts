@@ -11,7 +11,8 @@ import {
   ParseUUIDPipe,
   Headers,
 } from '@nestjs/common';
-import { CartService, AddToCartDto, UpdateCartItemDto } from './cart.service';
+import { CartService } from './cart.service';
+import type { AddToCartDto, UpdateCartItemDto } from './cart.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('cart')

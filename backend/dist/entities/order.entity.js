@@ -27,6 +27,12 @@ let Order = class Order {
     user_id;
     status;
     total;
+    shipping_address_line1;
+    shipping_address_line2;
+    shipping_city;
+    shipping_state;
+    shipping_postal_code;
+    shipping_country;
     created_at;
     updated_at;
     user;
@@ -55,6 +61,30 @@ __decorate([
     __metadata("design:type", Number)
 ], Order.prototype, "total", void 0);
 __decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_address_line1", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_address_line2", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_city", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_state", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_postal_code", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Order.prototype, "shipping_country", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Order.prototype, "created_at", void 0);
@@ -63,7 +93,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Order.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, user => user.orders),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Order.prototype, "user", void 0);

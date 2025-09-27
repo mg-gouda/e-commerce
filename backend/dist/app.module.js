@@ -50,11 +50,13 @@ const app_service_1 = require("./app.service");
 const redis_module_1 = require("./redis/redis.module");
 const elasticsearch_module_1 = require("./elasticsearch/elasticsearch.module");
 const auth_module_1 = require("./auth/auth.module");
+const users_module_1 = require("./users/users.module");
 const products_module_1 = require("./products/products.module");
 const categories_module_1 = require("./categories/categories.module");
 const cart_module_1 = require("./cart/cart.module");
 const orders_module_1 = require("./orders/orders.module");
 const payments_module_1 = require("./payments/payments.module");
+const reviews_module_1 = require("./reviews/reviews.module");
 const entities = __importStar(require("./entities"));
 let AppModule = class AppModule {
 };
@@ -85,11 +87,13 @@ exports.AppModule = AppModule = __decorate([
             redis_module_1.RedisModule,
             elasticsearch_module_1.ElasticsearchModule,
             auth_module_1.AuthModule,
+            users_module_1.UsersModule,
             products_module_1.ProductsModule,
             categories_module_1.CategoriesModule,
             cart_module_1.CartModule,
             orders_module_1.OrdersModule,
             payments_module_1.PaymentsModule,
+            reviews_module_1.ReviewsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

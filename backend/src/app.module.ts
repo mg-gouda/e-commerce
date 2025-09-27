@@ -8,11 +8,13 @@ import { AppService } from './app.service';
 import { RedisModule } from './redis/redis.module';
 import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import * as entities from './entities';
 
 @Module({
@@ -40,11 +42,13 @@ import * as entities from './entities';
     RedisModule,
     ElasticsearchModule,
     AuthModule,
+    UsersModule,
     ProductsModule,
     CategoriesModule,
     CartModule,
     OrdersModule,
     PaymentsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

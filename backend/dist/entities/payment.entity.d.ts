@@ -1,7 +1,7 @@
 import { Order } from './order.entity';
 export declare enum PaymentProvider {
-    STRIPE = "stripe",
-    PAYPAL = "paypal"
+    COD = "cod",
+    BANK_TRANSFER = "bank_transfer"
 }
 export declare enum PaymentStatus {
     PENDING = "pending",

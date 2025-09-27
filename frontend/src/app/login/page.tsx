@@ -22,7 +22,10 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(formData);
       authApi.setAuth(response);
-      router.push('/');
+
+      // Redirect to the page they were trying to access, or products page
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+      router.push(returnTo || '/products');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {

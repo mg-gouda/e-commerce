@@ -32,24 +32,30 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ nullable: true })
+  reset_token: string;
+
+  @Column({ nullable: true })
+  reset_token_expires: Date;
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => Order, order => order.user)
-  orders: Order[];
+  // @OneToMany(() => Order, order => order.user)
+  // orders: Order[];
 
-  @OneToMany(() => Review, review => review.user)
-  reviews: Review[];
+  // @OneToMany(() => Review, review => review.user)
+  // reviews: Review[];
 
-  @OneToMany(() => Cart, cart => cart.user)
-  carts: Cart[];
+  // @OneToMany(() => Cart, cart => cart.user)
+  // carts: Cart[];
 
-  @OneToMany(() => Wishlist, wishlist => wishlist.user)
-  wishlists: Wishlist[];
+  // @OneToMany(() => Wishlist, wishlist => wishlist.user)
+  // wishlists: Wishlist[];
 
-  @OneToMany(() => LoyaltyPoint, loyaltyPoint => loyaltyPoint.user)
-  loyaltyPoints: LoyaltyPoint[];
+  // @OneToMany(() => LoyaltyPoint, loyaltyPoint => loyaltyPoint.user)
+  // loyaltyPoints: LoyaltyPoint[];
 }

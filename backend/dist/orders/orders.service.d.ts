@@ -3,10 +3,7 @@ import { Order, OrderStatus } from '../entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
 import { Product } from '../entities/product.entity';
 import { CartService } from '../cart/cart.service';
-export interface CreateOrderDto {
-    shipping_address: string;
-    payment_method: string;
-}
+import { CreateOrderDto } from './dto/create-order.dto';
 export declare class OrdersService {
     private orderRepository;
     private orderItemRepository;

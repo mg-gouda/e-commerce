@@ -5,11 +5,7 @@ import { Order, OrderStatus } from '../entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
 import { Product } from '../entities/product.entity';
 import { CartService } from '../cart/cart.service';
-
-export interface CreateOrderDto {
-  shipping_address: string;
-  payment_method: string;
-}
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -61,6 +57,12 @@ export class OrdersService {
       user_id: userId,
       status: OrderStatus.PENDING,
       total,
+      shipping_address_line1: createOrderDto.shipping_address_line1,
+      shipping_address_line2: createOrderDto.shipping_address_line2,
+      shipping_city: createOrderDto.shipping_city,
+      shipping_state: createOrderDto.shipping_state,
+      shipping_postal_code: createOrderDto.shipping_postal_code,
+      shipping_country: createOrderDto.shipping_country,
     });
 
     const savedOrder = await this.orderRepository.save(order);
@@ -77,7 +79,7 @@ export class OrdersService {
       await this.productRepository.decrement(
         { id: orderItemData.product_id },
         'stock',
-        orderItemData.quantity,
+        orderItemData.quantity || 1,
       );
     }
 

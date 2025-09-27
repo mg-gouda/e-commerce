@@ -58,6 +58,12 @@ let OrdersService = class OrdersService {
             user_id: userId,
             status: order_entity_1.OrderStatus.PENDING,
             total,
+            shipping_address_line1: createOrderDto.shipping_address_line1,
+            shipping_address_line2: createOrderDto.shipping_address_line2,
+            shipping_city: createOrderDto.shipping_city,
+            shipping_state: createOrderDto.shipping_state,
+            shipping_postal_code: createOrderDto.shipping_postal_code,
+            shipping_country: createOrderDto.shipping_country,
         });
         const savedOrder = await this.orderRepository.save(order);
         for (const orderItemData of orderItems) {
@@ -66,7 +72,7 @@ let OrdersService = class OrdersService {
                 ...orderItemData,
             });
             await this.orderItemRepository.save(orderItem);
-            await this.productRepository.decrement({ id: orderItemData.product_id }, 'stock', orderItemData.quantity);
+            await this.productRepository.decrement({ id: orderItemData.product_id }, 'stock', orderItemData.quantity || 1);
         }
         await this.cartService.clearCart(userId, sessionId);
         return this.findOne(savedOrder.id);

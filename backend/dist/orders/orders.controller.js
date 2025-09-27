@@ -15,8 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersController = void 0;
 const common_1 = require("@nestjs/common");
 const orders_service_1 = require("./orders.service");
+const create_order_dto_1 = require("./dto/create-order.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const order_entity_1 = require("../entities/order.entity");
+const user_entity_1 = require("../entities/user.entity");
 let OrdersController = class OrdersController {
     ordersService;
     constructor(ordersService) {
@@ -46,7 +50,7 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Headers)('session-id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String]),
+    __metadata("design:paramtypes", [create_order_dto_1.CreateOrderDto, Object, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "createOrder", null);
 __decorate([
@@ -60,7 +64,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getMyOrders", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, common_1.Get)('admin/all'),
     __param(0, (0, common_1.Query)('page', new common_1.ParseIntPipe({ optional: true }))),
     __param(1, (0, common_1.Query)('limit', new common_1.ParseIntPipe({ optional: true }))),
@@ -77,7 +82,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)('status')),

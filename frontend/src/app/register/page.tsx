@@ -31,7 +31,7 @@ export default function RegisterPage() {
       const { confirmPassword, ...registerData } = formData;
       const response = await authApi.register(registerData);
       authApi.setAuth(response);
-      router.push('/');
+      router.push('/products');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

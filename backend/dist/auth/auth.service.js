@@ -51,6 +51,7 @@ const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcryptjs"));
+const crypto = __importStar(require("crypto"));
 const user_entity_1 = require("../entities/user.entity");
 let AuthService = class AuthService {
     userRepository;
@@ -107,6 +108,39 @@ let AuthService = class AuthService {
     }
     async findById(id) {
         return this.userRepository.findOne({ where: { id } });
+    }
+    async forgotPassword(forgotPasswordDto) {
+        const { email } = forgotPasswordDto;
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            return { message: 'If email exists, password reset instructions have been sent' };
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpires = new Date(Date.now() + 3600000);
+        await this.userRepository.update(user.id, {
+            reset_token: resetToken,
+            reset_token_expires: resetTokenExpires,
+        });
+        console.log(`Password reset token for ${email}: ${resetToken}`);
+        return { message: 'If email exists, password reset instructions have been sent' };
+    }
+    async resetPassword(resetPasswordDto) {
+        const { token, password } = resetPasswordDto;
+        const user = await this.userRepository.findOne({
+            where: {
+                reset_token: token,
+            },
+        });
+        if (!user || !user.reset_token_expires || user.reset_token_expires < new Date()) {
+            throw new common_1.BadRequestException('Invalid or expired reset token');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await this.userRepository.update(user.id, {
+            password_hash: hashedPassword,
+            reset_token: undefined,
+            reset_token_expires: undefined,
+        });
+        return { message: 'Password has been reset successfully' };
     }
 };
 exports.AuthService = AuthService;

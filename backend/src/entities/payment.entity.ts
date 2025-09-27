@@ -2,8 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Jo
 import { Order } from './order.entity';
 
 export enum PaymentProvider {
-  STRIPE = 'stripe',
-  PAYPAL = 'paypal'
+  COD = 'cod',
+  BANK_TRANSFER = 'bank_transfer',
+  // STRIPE = 'stripe', // Commented out for now
+  // PAYPAL = 'paypal'  // Commented out for now
 }
 
 export enum PaymentStatus {

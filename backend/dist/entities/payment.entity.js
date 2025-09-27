@@ -14,8 +14,8 @@ const typeorm_1 = require("typeorm");
 const order_entity_1 = require("./order.entity");
 var PaymentProvider;
 (function (PaymentProvider) {
-    PaymentProvider["STRIPE"] = "stripe";
-    PaymentProvider["PAYPAL"] = "paypal";
+    PaymentProvider["COD"] = "cod";
+    PaymentProvider["BANK_TRANSFER"] = "bank_transfer";
 })(PaymentProvider || (exports.PaymentProvider = PaymentProvider = {}));
 var PaymentStatus;
 (function (PaymentStatus) {

@@ -1,23 +1,19 @@
 import { Repository } from 'typeorm';
-import Stripe from 'stripe';
 import { Payment } from '../entities/payment.entity';
 import { Order } from '../entities/order.entity';
-export interface CreatePaymentIntentDto {
-    order_id: string;
-    payment_method?: string;
-}
+import { CreatePaymentDto } from './dto/create-payment.dto';
 export declare class PaymentsService {
     private paymentRepository;
     private orderRepository;
-    private stripe;
     constructor(paymentRepository: Repository<Payment>, orderRepository: Repository<Order>);
-    createPaymentIntent(createPaymentIntentDto: CreatePaymentIntentDto): Promise<{
-        client_secret: string;
+    createPayment(createPaymentDto: CreatePaymentDto): Promise<{
         payment_id: string;
+        message: string;
+        instructions?: any;
     }>;
-    handleStripeWebhook(event: Stripe.Event): Promise<void>;
-    private handlePaymentSuccess;
-    private handlePaymentFailure;
+    confirmBankTransferPayment(paymentId: string, adminUserId: string): Promise<Payment>;
+    markCodPaymentCompleted(paymentId: string): Promise<Payment>;
+    getBankTransferInstructions(): Promise<any>;
     getPayment(id: string): Promise<Payment>;
     getOrderPayments(orderId: string): Promise<Payment[]>;
 }

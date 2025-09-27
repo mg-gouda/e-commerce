@@ -29,13 +29,31 @@ export class Order {
   @Column('decimal', { precision: 10, scale: 2 })
   total: number;
 
+  @Column()
+  shipping_address_line1: string;
+
+  @Column({ nullable: true })
+  shipping_address_line2: string;
+
+  @Column()
+  shipping_city: string;
+
+  @Column()
+  shipping_state: string;
+
+  @Column()
+  shipping_postal_code: string;
+
+  @Column()
+  shipping_country: string;
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @ManyToOne(() => User, user => user.orders)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 

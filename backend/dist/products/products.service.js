@@ -94,11 +94,12 @@ let ProductsService = class ProductsService {
     }
     async search(query, filters) {
         const searchResult = await this.elasticsearchService.searchProducts(query, filters);
-        const productIds = searchResult.body.hits.hits.map((hit) => hit._source.id);
+        const productIds = searchResult.hits.hits.map((hit) => hit._source.id);
         if (productIds.length === 0) {
             return [];
         }
-        return this.productRepository.findByIds(productIds, {
+        return this.productRepository.find({
+            where: { id: productIds },
             relations: ['category'],
         });
     }

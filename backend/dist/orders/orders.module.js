@@ -14,6 +14,7 @@ const orders_controller_1 = require("./orders.controller");
 const order_entity_1 = require("../entities/order.entity");
 const order_item_entity_1 = require("../entities/order-item.entity");
 const product_entity_1 = require("../entities/product.entity");
+const user_entity_1 = require("../entities/user.entity");
 const cart_entity_1 = require("../entities/cart.entity");
 const cart_item_entity_1 = require("../entities/cart-item.entity");
 const cart_module_1 = require("../cart/cart.module");
@@ -23,7 +24,7 @@ exports.OrdersModule = OrdersModule;
 exports.OrdersModule = OrdersModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([order_entity_1.Order, order_item_entity_1.OrderItem, product_entity_1.Product, cart_entity_1.Cart, cart_item_entity_1.CartItem]),
+            typeorm_1.TypeOrmModule.forFeature([order_entity_1.Order, order_item_entity_1.OrderItem, product_entity_1.Product, user_entity_1.User, cart_entity_1.Cart, cart_item_entity_1.CartItem]),
             cart_module_1.CartModule,
         ],
         controllers: [orders_controller_1.OrdersController],

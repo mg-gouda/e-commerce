@@ -1,4 +1,5 @@
-import { CartService, AddToCartDto, UpdateCartItemDto } from './cart.service';
+import { CartService } from './cart.service';
+import type { AddToCartDto, UpdateCartItemDto } from './cart.service';
 export declare class CartController {
     private readonly cartService;
     constructor(cartService: CartService);

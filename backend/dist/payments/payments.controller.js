@@ -11,41 +11,31 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentsController = void 0;
 const common_1 = require("@nestjs/common");
 const payments_service_1 = require("./payments.service");
+const create_payment_dto_1 = require("./dto/create-payment.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
-const stripe_1 = __importDefault(require("stripe"));
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const user_entity_1 = require("../entities/user.entity");
 let PaymentsController = class PaymentsController {
     paymentsService;
     constructor(paymentsService) {
         this.paymentsService = paymentsService;
     }
-    createPaymentIntent(createPaymentIntentDto) {
-        return this.paymentsService.createPaymentIntent(createPaymentIntentDto);
+    createPayment(createPaymentDto) {
+        return this.paymentsService.createPayment(createPaymentDto);
     }
-    async handleWebhook(body, signature) {
-        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-        if (!endpointSecret) {
-            throw new Error('Stripe webhook secret not configured');
-        }
-        let event;
-        try {
-            const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key', {
-                apiVersion: '2025-08-27.basil',
-            });
-            event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
-        }
-        catch (err) {
-            console.log(`Webhook signature verification failed.`, err.message);
-            throw new Error('Invalid signature');
-        }
-        await this.paymentsService.handleStripeWebhook(event);
-        return { received: true };
+    getBankTransferInstructions() {
+        return this.paymentsService.getBankTransferInstructions();
+    }
+    confirmBankTransferPayment(id, req) {
+        return this.paymentsService.confirmBankTransferPayment(id, req.user.id);
+    }
+    markCodPaymentCompleted(id) {
+        return this.paymentsService.markCodPaymentCompleted(id);
     }
     findOne(id) {
         return this.paymentsService.getPayment(id);
@@ -57,20 +47,37 @@ let PaymentsController = class PaymentsController {
 exports.PaymentsController = PaymentsController;
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Post)('create-payment-intent'),
+    (0, common_1.Post)('create'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [create_payment_dto_1.CreatePaymentDto]),
     __metadata("design:returntype", void 0)
-], PaymentsController.prototype, "createPaymentIntent", null);
+], PaymentsController.prototype, "createPayment", null);
 __decorate([
-    (0, common_1.Post)('webhook'),
-    __param(0, (0, common_1.RawBody)()),
-    __param(1, (0, common_1.Headers)('stripe-signature')),
+    (0, common_1.Get)('bank-transfer-instructions'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Buffer, String]),
-    __metadata("design:returntype", Promise)
-], PaymentsController.prototype, "handleWebhook", null);
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PaymentsController.prototype, "getBankTransferInstructions", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, common_1.Patch)(':id/confirm-bank-transfer'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PaymentsController.prototype, "confirmBankTransferPayment", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, common_1.Patch)(':id/mark-cod-completed'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PaymentsController.prototype, "markCodPaymentCompleted", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)(':id'),

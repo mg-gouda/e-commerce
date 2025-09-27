@@ -1,4 +1,5 @@
-import { OrdersService, CreateOrderDto } from './orders.service';
+import { OrdersService } from './orders.service';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from '../entities/order.entity';
 export declare class OrdersController {
     private readonly ordersService;
