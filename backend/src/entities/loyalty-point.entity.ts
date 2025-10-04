@@ -12,7 +12,7 @@ export class LoyaltyPoint {
   @Column('int')
   points: number;
 
-  @ManyToOne(() => User, user => user.loyaltyPoints)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

@@ -7,6 +7,7 @@ import {
   Patch,
   UseGuards,
   Request,
+  Query,
   ParseUUIDPipe,
   // RawBody,
   // Headers,
@@ -17,11 +18,30 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { PaymentStatus } from '../entities/payment.entity';
 // import Stripe from 'stripe'; // Commented out for now
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get('all')
+  getAllPayments(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('status') status?: PaymentStatus,
+  ) {
+    return this.paymentsService.getAllPayments(page, limit, status);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get('stats')
+  getPaymentStats() {
+    return this.paymentsService.getPaymentStats();
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('create')

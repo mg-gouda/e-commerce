@@ -18,6 +18,8 @@ const user_entity_1 = require("../entities/user.entity");
 const cart_entity_1 = require("../entities/cart.entity");
 const cart_item_entity_1 = require("../entities/cart-item.entity");
 const cart_module_1 = require("../cart/cart.module");
+const notifications_module_1 = require("../notifications/notifications.module");
+const email_module_1 = require("../email/email.module");
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -26,6 +28,8 @@ exports.OrdersModule = OrdersModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([order_entity_1.Order, order_item_entity_1.OrderItem, product_entity_1.Product, user_entity_1.User, cart_entity_1.Cart, cart_item_entity_1.CartItem]),
             cart_module_1.CartModule,
+            notifications_module_1.NotificationsModule,
+            email_module_1.EmailModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService],

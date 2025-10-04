@@ -22,11 +22,11 @@ export class Review {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => Product, product => product.reviews)
+  @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ManyToOne(() => User, user => user.reviews)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

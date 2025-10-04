@@ -6,6 +6,8 @@ import { OrderItem } from '../entities/order-item.entity';
 import { Product } from '../entities/product.entity';
 import { CartService } from '../cart/cart.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class OrdersService {
@@ -17,6 +19,8 @@ export class OrdersService {
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
     private cartService: CartService,
+    private emailService: EmailService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async createOrder(userId: string, sessionId: string | undefined, createOrderDto: CreateOrderDto): Promise<Order> {
@@ -86,7 +90,25 @@ export class OrdersService {
     // Clear cart
     await this.cartService.clearCart(userId, sessionId);
 
-    return this.findOne(savedOrder.id);
+    // Get the complete order with user info
+    const completeOrder = await this.findOne(savedOrder.id);
+
+    // Send order confirmation email and notification
+    await Promise.all([
+      this.emailService.sendOrderConfirmationEmail(
+        completeOrder.user.email,
+        completeOrder.user.name,
+        completeOrder.id,
+        Number(completeOrder.total),
+      ),
+      this.notificationsService.notifyOrderCreated(
+        userId,
+        completeOrder.id,
+        Number(completeOrder.total),
+      ),
+    ]);
+
+    return completeOrder;
   }
 
   async findAll(userId?: string, page: number = 1, limit: number = 10): Promise<{ orders: Order[]; total: number }> {
@@ -123,8 +145,28 @@ export class OrdersService {
 
   async updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
     const order = await this.findOne(id);
+    const oldStatus = order.status;
     order.status = status;
     await this.orderRepository.save(order);
+
+    // Send email notification and in-app notification if status changed and it's not pending
+    // (pending already sent confirmation email)
+    if (oldStatus !== status && status !== OrderStatus.PENDING) {
+      await Promise.all([
+        this.emailService.sendOrderStatusUpdateEmail(
+          order.user.email,
+          order.user.name,
+          order.id,
+          status,
+        ),
+        this.notificationsService.notifyOrderStatusUpdate(
+          order.user_id,
+          order.id,
+          status,
+        ),
+      ]);
+    }
+
     return order;
   }
 

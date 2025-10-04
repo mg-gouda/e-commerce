@@ -11,16 +11,17 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const products_service_1 = require("./products.service");
 const products_controller_1 = require("./products.controller");
-const products_resolver_1 = require("./products.resolver");
 const product_entity_1 = require("../entities/product.entity");
 const category_entity_1 = require("../entities/category.entity");
+const order_item_entity_1 = require("../entities/order-item.entity");
+const upload_module_1 = require("../upload/upload.module");
 let ProductsModule = class ProductsModule {
 };
 exports.ProductsModule = ProductsModule;
 exports.ProductsModule = ProductsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, category_entity_1.Category])],
-        providers: [products_service_1.ProductsService, products_resolver_1.ProductsResolver],
+        imports: [typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, category_entity_1.Category, order_item_entity_1.OrderItem]), upload_module_1.UploadModule],
+        providers: [products_service_1.ProductsService],
         controllers: [products_controller_1.ProductsController],
         exports: [products_service_1.ProductsService],
     })

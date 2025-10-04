@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { Cart } from '../entities/cart.entity';
 import { CartItem } from '../entities/cart-item.entity';
 import { Product } from '../entities/product.entity';
-import { RedisService } from '../redis/redis.service';
 
 export interface AddToCartDto {
   product_id: string;
@@ -24,7 +23,6 @@ export class CartService {
     private cartItemRepository: Repository<CartItem>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
-    private redisService: RedisService,
   ) {}
 
   async getOrCreateCart(userId?: string, sessionId?: string): Promise<Cart> {
@@ -35,27 +33,34 @@ export class CartService {
         where: { user_id: userId },
         relations: ['cartItems', 'cartItems.product'],
       });
-    }
-
-    if (!cart && sessionId) {
-      // Try to get cart from Redis for guest users
-      const cartData = await this.redisService.get(`cart:${sessionId}`);
-      if (cartData) {
-        return JSON.parse(cartData);
-      }
+    } else if (sessionId) {
+      cart = await this.cartRepository.findOne({
+        where: { session_id: sessionId },
+        relations: ['cartItems', 'cartItems.product'],
+      });
     }
 
     if (!cart) {
       cart = this.cartRepository.create({
         user_id: userId,
+        session_id: sessionId,
       });
       cart = await this.cartRepository.save(cart);
+
+      // Reload the cart with relations to ensure cartItems is always included
+      const reloadedCart = await this.cartRepository.findOne({
+        where: { id: cart.id },
+        relations: ['cartItems', 'cartItems.product'],
+      });
+      if (reloadedCart) {
+        cart = reloadedCart;
+      }
     }
 
     return cart;
   }
 
-  async addToCart(userId: string | undefined, sessionId: string | undefined, addToCartDto: AddToCartDto): Promise<Cart> {
+  async addToCart(addToCartDto: AddToCartDto, userId?: string, sessionId?: string): Promise<Cart> {
     const { product_id, quantity } = addToCartDto;
 
     // Verify product exists and has sufficient stock
@@ -92,16 +97,10 @@ export class CartService {
       await this.cartItemRepository.save(cartItem);
     }
 
-    // Update cart in Redis for guest users
-    if (!userId && sessionId) {
-      const updatedCart = await this.getCartWithItems(cart.id);
-      await this.redisService.set(`cart:${sessionId}`, JSON.stringify(updatedCart), 3600 * 24); // 24 hours
-    }
-
     return this.getCartWithItems(cart.id);
   }
 
-  async updateCartItem(userId: string | undefined, sessionId: string | undefined, itemId: string, updateCartItemDto: UpdateCartItemDto): Promise<Cart> {
+  async updateCartItem(itemId: string, updateCartItemDto: UpdateCartItemDto, userId?: string, sessionId?: string): Promise<Cart> {
     const { quantity } = updateCartItemDto;
 
     const cartItem = await this.cartItemRepository.findOne({
@@ -117,6 +116,9 @@ export class CartService {
     if (userId && cartItem.cart.user_id !== userId) {
       throw new BadRequestException('Unauthorized');
     }
+    if (sessionId && cartItem.cart.session_id !== sessionId) {
+      throw new BadRequestException('Unauthorized');
+    }
 
     if (quantity <= 0) {
       await this.cartItemRepository.remove(cartItem);
@@ -128,16 +130,10 @@ export class CartService {
       await this.cartItemRepository.save(cartItem);
     }
 
-    // Update cart in Redis for guest users
-    if (!userId && sessionId) {
-      const updatedCart = await this.getCartWithItems(cartItem.cart.id);
-      await this.redisService.set(`cart:${sessionId}`, JSON.stringify(updatedCart), 3600 * 24);
-    }
-
     return this.getCartWithItems(cartItem.cart.id);
   }
 
-  async removeFromCart(userId: string | undefined, sessionId: string | undefined, itemId: string): Promise<Cart> {
+  async removeFromCart(itemId: string, userId?: string, sessionId?: string): Promise<Cart> {
     const cartItem = await this.cartItemRepository.findOne({
       where: { id: itemId },
       relations: ['cart'],
@@ -151,30 +147,22 @@ export class CartService {
     if (userId && cartItem.cart.user_id !== userId) {
       throw new BadRequestException('Unauthorized');
     }
+    if (sessionId && cartItem.cart.session_id !== sessionId) {
+      throw new BadRequestException('Unauthorized');
+    }
 
     await this.cartItemRepository.remove(cartItem);
-
-    // Update cart in Redis for guest users
-    if (!userId && sessionId) {
-      const updatedCart = await this.getCartWithItems(cartItem.cart.id);
-      await this.redisService.set(`cart:${sessionId}`, JSON.stringify(updatedCart), 3600 * 24);
-    }
 
     return this.getCartWithItems(cartItem.cart.id);
   }
 
-  async getCart(userId: string | undefined, sessionId: string | undefined): Promise<Cart> {
+  async getCart(userId?: string, sessionId?: string): Promise<Cart> {
     return this.getOrCreateCart(userId, sessionId);
   }
 
-  async clearCart(userId: string | undefined, sessionId: string | undefined): Promise<void> {
+  async clearCart(userId?: string, sessionId?: string): Promise<void> {
     const cart = await this.getOrCreateCart(userId, sessionId);
     await this.cartItemRepository.delete({ cart_id: cart.id });
-
-    // Clear cart from Redis for guest users
-    if (!userId && sessionId) {
-      await this.redisService.del(`cart:${sessionId}`);
-    }
   }
 
   private async getCartWithItems(cartId: string): Promise<Cart> {

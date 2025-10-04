@@ -148,7 +148,7 @@ export class ReviewsService {
     const result = await this.reviewsRepository
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'avg')
-      .where('review.productId = :productId', { productId })
+      .where('review.product_id = :productId', { productId })
       .getRawOne();
 
     return parseFloat(result.avg) || 0;

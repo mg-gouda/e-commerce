@@ -1,8 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { GqlExecutionContext } from '@nestjs/graphql';
-import { UserRole } from '../../entities/user.entity';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { UserRole } from '../../entities/user.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,19 +17,12 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const ctx = GqlExecutionContext.create(context);
-    const request = ctx.getContext().req || context.switchToHttp().getRequest();
-    const user = request.user;
+    const { user } = context.switchToHttp().getRequest();
 
     if (!user) {
-      throw new ForbiddenException('Authentication required');
+      return false;
     }
 
-    const hasRole = requiredRoles.some((role) => user.role === role);
-    if (!hasRole) {
-      throw new ForbiddenException('Insufficient permissions');
-    }
-
-    return true;
+    return requiredRoles.some((role) => user.role === role);
   }
 }

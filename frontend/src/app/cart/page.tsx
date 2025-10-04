@@ -12,7 +12,7 @@ interface CartItem {
   product: {
     id: string;
     name: string;
-    price: number;
+    price: string | number;
     image_url?: string;
     stock: number;
   };
@@ -36,19 +36,15 @@ export default function CartPage() {
 
   const fetchCart = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+      const response = await api.get('/cart');
 
-      const response = await api.get('/cart', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Ensure cartItems is always an array, even if not provided by backend
+      const cartData = {
+        ...response.data,
+        cartItems: response.data.cartItems || []
+      };
 
-      setCart(response.data);
+      setCart(cartData);
     } catch (err) {
       setError('Failed to fetch cart');
       console.error('Error fetching cart:', err);
@@ -62,14 +58,9 @@ export default function CartPage() {
 
     try {
       setUpdating(itemId);
-      const token = localStorage.getItem('token');
 
       await api.patch(`/cart/${itemId}`, {
         quantity: newQuantity,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       await fetchCart();
@@ -84,13 +75,8 @@ export default function CartPage() {
   const removeItem = async (itemId: string) => {
     try {
       setUpdating(itemId);
-      const token = localStorage.getItem('token');
 
-      await api.delete(`/cart/${itemId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/cart/${itemId}`);
 
       await fetchCart();
     } catch (err) {
@@ -103,7 +89,7 @@ export default function CartPage() {
 
   const calculateTotal = () => {
     if (!cart?.cartItems) return 0;
-    return cart.cartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+    return cart.cartItems.reduce((total, item) => total + (Number(item.product.price) * item.quantity), 0);
   };
 
   const proceedToCheckout = () => {
@@ -194,7 +180,7 @@ export default function CartPage() {
                             {item.product.name}
                           </Link>
                           <p className="text-lg font-bold text-gray-900 mt-1">
-                            ${item.product.price.toFixed(2)}
+                            ${Number(item.product.price).toFixed(2)}
                           </p>
                           <p className="text-sm text-gray-500">
                             Stock: {item.product.stock} available
@@ -225,7 +211,7 @@ export default function CartPage() {
 
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900">
-                            ${(item.product.price * item.quantity).toFixed(2)}
+                            ${(Number(item.product.price) * item.quantity).toFixed(2)}
                           </p>
                           <button
                             onClick={() => removeItem(item.id)}

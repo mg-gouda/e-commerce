@@ -8,14 +8,14 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: string | number;
   stock: number;
   category: {
     id: string;
     name: string;
   };
   image_url?: string;
-  average_rating: number;
+  average_rating: string | number;
 }
 
 interface Category {
@@ -46,9 +46,10 @@ export default function ProductsPage() {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data);
+      setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Error fetching categories:', err);
+      setCategories([]);
     }
   };
 
@@ -67,11 +68,21 @@ export default function ProductsPage() {
       }
 
       const response = await api.get(url);
-      setProducts(response.data.products || response.data);
-      setTotalPages(Math.ceil((response.data.total || response.data.length) / 12));
+
+      // Ensure we always set products to an array
+      let productsData = [];
+      if (response.data.products && Array.isArray(response.data.products)) {
+        productsData = response.data.products;
+      } else if (Array.isArray(response.data)) {
+        productsData = response.data;
+      }
+
+      setProducts(productsData);
+      setTotalPages(Math.ceil((response.data.total || productsData.length) / 12));
     } catch (err) {
       setError('Failed to fetch products');
       console.error('Error fetching products:', err);
+      setProducts([]); // Reset products to empty array on error
     } finally {
       setLoading(false);
     }
@@ -103,7 +114,7 @@ export default function ProductsPage() {
     return stars;
   };
 
-  if (loading && products.length === 0) {
+  if (loading && (!Array.isArray(products) || products.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,7 +151,7 @@ export default function ProductsPage() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Categories</option>
-                {categories.map((category) => (
+                {categories && Array.isArray(categories) && categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -189,20 +200,20 @@ export default function ProductsPage() {
           )}
 
           {/* Products Grid */}
-          {products.length === 0 && !loading ? (
+          {(!Array.isArray(products) || products.length === 0) && !loading ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-xl">No products found</p>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
+                {Array.isArray(products) && products.map((product) => (
                   <div key={product.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
                     <Link href={`/products/${product.id}`}>
                       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200">
                         {product.image_url ? (
                           <img
-                            src={product.image_url}
+                            src={`${process.env.NEXT_PUBLIC_API_URL}${product.image_url}`}
                             alt={product.name}
                             className="h-48 w-full object-cover object-center group-hover:opacity-75"
                           />
@@ -219,15 +230,15 @@ export default function ProductsPage() {
 
                         <div className="flex items-center mb-2">
                           <div className="flex items-center">
-                            {renderStars(Math.round(product.average_rating))}
+                            {renderStars(Math.round(Number(product.average_rating) || 0))}
                           </div>
                           <span className="ml-2 text-sm text-gray-600">
-                            ({product.average_rating.toFixed(1)})
+                            ({(Number(product.average_rating) || 0).toFixed(1)})
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <p className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-gray-900">${Number(product.price).toFixed(2)}</p>
                           <p className="text-sm text-gray-500">
                             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                           </p>

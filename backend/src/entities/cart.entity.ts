@@ -10,13 +10,16 @@ export class Cart {
   @Column({ nullable: true })
   user_id: string;
 
+  @Column({ nullable: true })
+  session_id: string;
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @ManyToOne(() => User, user => user.carts)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 

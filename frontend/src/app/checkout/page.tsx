@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { getAuthHeaders } from '@/lib/session';
 
 interface CartItem {
   id: string;
@@ -11,7 +12,7 @@ interface CartItem {
   product: {
     id: string;
     name: string;
-    price: number;
+    price: string | number;
     image_url?: string;
   };
 }
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank_transfer'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank_transfer' | 'stripe'>('cod');
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     shipping_address_line1: '',
     shipping_address_line2: '',
@@ -59,9 +60,7 @@ export default function CheckoutPage() {
       }
 
       const response = await api.get('/cart', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.data?.cartItems || response.data.cartItems.length === 0) {
@@ -80,7 +79,7 @@ export default function CheckoutPage() {
 
   const calculateTotal = () => {
     if (!cart?.cartItems) return 0;
-    return cart.cartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+    return cart.cartItems.reduce((total, item) => total + (Number(item.product.price) * item.quantity), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,7 +273,7 @@ export default function CheckoutPage() {
                       type="radio"
                       value="cod"
                       checked={paymentMethod === 'cod'}
-                      onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank_transfer')}
+                      onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank_transfer' | 'stripe')}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <label htmlFor="cod" className="ml-3">
@@ -294,7 +293,7 @@ export default function CheckoutPage() {
                       type="radio"
                       value="bank_transfer"
                       checked={paymentMethod === 'bank_transfer'}
-                      onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank_transfer')}
+                      onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank_transfer' | 'stripe')}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <label htmlFor="bank_transfer" className="ml-3">
@@ -303,6 +302,26 @@ export default function CheckoutPage() {
                       </span>
                       <span className="block text-sm text-gray-500">
                         Transfer money directly to our bank account
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      id="stripe"
+                      name="payment-method"
+                      type="radio"
+                      value="stripe"
+                      checked={paymentMethod === 'stripe'}
+                      onChange={(e) => setPaymentMethod(e.target.value as 'cod' | 'bank_transfer' | 'stripe')}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <label htmlFor="stripe" className="ml-3">
+                      <span className="block text-sm font-medium text-gray-700">
+                        Credit/Debit Card
+                      </span>
+                      <span className="block text-sm text-gray-500">
+                        Pay securely with your credit or debit card via Stripe
                       </span>
                     </label>
                   </div>
@@ -354,7 +373,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <p className="text-sm font-medium text-gray-900">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    ${(Number(item.product.price) * item.quantity).toFixed(2)}
                   </p>
                 </div>
               ))}

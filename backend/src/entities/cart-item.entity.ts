@@ -20,7 +20,7 @@ export class CartItem {
   @JoinColumn({ name: 'cart_id' })
   cart: Cart;
 
-  @ManyToOne(() => Product, product => product.cartItems)
+  @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;
 }

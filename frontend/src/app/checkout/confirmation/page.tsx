@@ -116,7 +116,7 @@ export default function CheckoutConfirmationPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-blue-700">Amount</label>
-                    <p className="text-blue-900 font-mono text-lg font-bold">${paymentData.instructions.amount?.toFixed(2)}</p>
+                    <p className="text-blue-900 font-mono text-lg font-bold">${Number(paymentData.instructions.amount || 0).toFixed(2)}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-blue-700">Reference Number</label>

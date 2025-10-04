@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 interface User {
   id: string;
@@ -12,7 +13,7 @@ interface User {
   joinedDate: string;
   lastLogin: string;
   totalOrders: number;
-  totalSpent: number;
+  totalSpent: string | number;
 }
 
 export default function UsersManagement() {
@@ -116,7 +117,7 @@ export default function UsersManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -259,7 +260,7 @@ export default function UsersManagement() {
                       {user.totalOrders}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${user.totalSpent.toFixed(2)}
+                      ${Number(user.totalSpent).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(user.lastLogin).toLocaleDateString()}
@@ -367,6 +368,6 @@ export default function UsersManagement() {
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

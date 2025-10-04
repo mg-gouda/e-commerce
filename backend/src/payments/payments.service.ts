@@ -6,6 +6,16 @@ import { Payment, PaymentProvider, PaymentStatus } from '../entities/payment.ent
 import { Order, OrderStatus } from '../entities/order.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
+export interface BankTransferInstructions {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  routing_number: string;
+  amount: number;
+  reference: string;
+  instructions: string[];
+}
+
 @Injectable()
 export class PaymentsService {
   // private stripe: Stripe; // Commented out for now
@@ -22,7 +32,7 @@ export class PaymentsService {
     // });
   }
 
-  async createPayment(createPaymentDto: CreatePaymentDto): Promise<{ payment_id: string; message: string; instructions?: any }> {
+  async createPayment(createPaymentDto: CreatePaymentDto): Promise<{ payment_id: string; message: string; instructions?: BankTransferInstructions }> {
     const { order_id, payment_method, bank_details } = createPaymentDto;
 
     // Find the order
@@ -51,7 +61,7 @@ export class PaymentsService {
 
     // Handle different payment methods
     let message = '';
-    let instructions = {};
+    let instructions: any = {};
 
     switch (payment_method) {
       case PaymentProvider.COD:
@@ -202,5 +212,45 @@ export class PaymentsService {
       where: { order_id: orderId },
       order: { created_at: 'DESC' },
     });
+  }
+
+  async getAllPayments(page: number = 1, limit: number = 20, status?: PaymentStatus) {
+    const where = status ? { status } : {};
+
+    const [payments, total] = await this.paymentRepository.findAndCount({
+      where,
+      relations: ['order', 'order.user'],
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      payments,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  async getPaymentStats() {
+    const allPayments = await this.paymentRepository.find();
+
+    const totalRevenue = allPayments
+      .filter(p => p.status === PaymentStatus.PAID)
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+
+    const pendingPayments = allPayments.filter(p => p.status === PaymentStatus.PENDING);
+    const paidPayments = allPayments.filter(p => p.status === PaymentStatus.PAID);
+    const failedPayments = allPayments.filter(p => p.status === PaymentStatus.FAILED);
+
+    return {
+      total_payments: allPayments.length,
+      total_revenue: totalRevenue,
+      pending_count: pendingPayments.length,
+      paid_count: paidPayments.length,
+      failed_count: failedPayments.length,
+      pending_amount: pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0),
+    };
   }
 }

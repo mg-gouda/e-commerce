@@ -3,6 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -37,6 +39,17 @@ export declare class AuthController {
         message: string;
     }>;
     resetPassword(resetPasswordDto: ResetPasswordDto): Promise<{
+        message: string;
+    }>;
+    updateProfile(req: any, updateProfileDto: UpdateProfileDto): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        role: import("../entities/user.entity").UserRole;
+        created_at: Date;
+        updated_at: Date;
+    }>;
+    changePassword(req: any, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
     }>;
 }

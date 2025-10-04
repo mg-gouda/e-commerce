@@ -10,7 +10,7 @@ export class Wishlist {
   @Column()
   user_id: string;
 
-  @ManyToOne(() => User, user => user.wishlists)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 

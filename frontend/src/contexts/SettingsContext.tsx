@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { api } from '@/lib/api';
 
 interface Settings {
   siteName: string;
@@ -45,6 +46,34 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
+
+  useEffect(() => {
+    fetchBrandingSettings();
+  }, []);
+
+  const fetchBrandingSettings = async () => {
+    try {
+      const [logoRes, faviconRes] = await Promise.all([
+        api.get('/settings/site_logo').catch(() => ({ data: { value: '' } })),
+        api.get('/settings/site_favicon').catch(() => ({ data: { value: '' } })),
+      ]);
+
+      const updates: Partial<Settings> = {};
+
+      if (logoRes.data?.value) {
+        updates.platformLogo = logoRes.data.value;
+      }
+      if (faviconRes.data?.value) {
+        updates.faviconUrl = faviconRes.data.value;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        setSettings(prev => ({ ...prev, ...updates }));
+      }
+    } catch (error) {
+      console.error('Error fetching branding settings:', error);
+    }
+  };
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));

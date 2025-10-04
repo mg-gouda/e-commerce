@@ -29,7 +29,7 @@ export default function Header() {
             <Link href="/" className="flex items-center">
               {settings.platformLogo ? (
                 <img
-                  src={settings.platformLogo}
+                  src={settings.platformLogo.startsWith('data:') || settings.platformLogo.startsWith('http') ? settings.platformLogo : `${process.env.NEXT_PUBLIC_API_URL}${settings.platformLogo}`}
                   alt={settings.siteName}
                   className="h-8 w-auto"
                 />
@@ -53,8 +53,15 @@ export default function Header() {
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
+            <Link href="/wishlist" className="text-gray-600 hover:text-gray-900">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </Link>
             <Link href="/cart" className="text-gray-600 hover:text-gray-900">
-              Cart
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
             </Link>
 
             {user ? (
@@ -77,11 +84,12 @@ export default function Header() {
                     <Link href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       Orders
                     </Link>
-                    {user.role === 'admin' && (
-                      <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Admin Dashboard
-                      </Link>
-                    )}
+                    <Link href="/loyalty-points" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      Loyalty Points
+                    </Link>
+                    <Link href="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      Wishlist
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

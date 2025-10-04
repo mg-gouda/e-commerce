@@ -9,6 +9,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +19,7 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -37,6 +41,9 @@ export class AuthService {
 
     const savedUser = await this.userRepository.save(user);
     const { password_hash, ...result } = savedUser;
+
+    // Send welcome email
+    await this.emailService.sendWelcomeEmail(savedUser.email, savedUser.name);
 
     const token = this.jwtService.sign({ sub: savedUser.id, email: savedUser.email, role: savedUser.role });
 
@@ -100,9 +107,9 @@ export class AuthService {
       reset_token_expires: resetTokenExpires,
     });
 
-    // TODO: Send email with reset token
-    // For now, just return the token (in production, this should be sent via email)
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(email, resetToken);
+    console.log(`Password reset email sent to ${email}`);
 
     return { message: 'If email exists, password reset instructions have been sent' };
   }
@@ -131,5 +138,52 @@ export class AuthService {
     });
 
     return { message: 'Password has been reset successfully' };
+  }
+
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+    const { name, email } = updateProfileDto;
+
+    // Check if email is being changed and if it's already taken
+    if (email) {
+      const existingUser = await this.userRepository.findOne({ where: { email } });
+      if (existingUser && existingUser.id !== userId) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+
+    await this.userRepository.update(userId, { name, email });
+
+    const updatedUser = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { password_hash, reset_token, reset_token_expires, ...result } = updatedUser;
+
+    return result;
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await this.userRepository.update(userId, { password_hash: hashedPassword });
+
+    return { message: 'Password changed successfully' };
   }
 }

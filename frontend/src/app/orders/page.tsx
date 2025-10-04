@@ -9,7 +9,7 @@ interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  price: number;
+  price: string | number;
   product: {
     id: string;
     name: string;
@@ -20,7 +20,7 @@ interface OrderItem {
 interface Order {
   id: string;
   status: string;
-  total: number;
+  total: string | number;
   shipping_address_line1: string;
   shipping_address_line2?: string;
   shipping_city: string;
@@ -171,7 +171,7 @@ export default function OrdersPage() {
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
                       <p className="text-lg font-bold text-gray-900 mt-1">
-                        ${order.total.toFixed(2)}
+                        ${Number(order.total).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -202,11 +202,11 @@ export default function OrdersPage() {
                                 {item.product.name}
                               </p>
                               <p className="text-sm text-gray-500">
-                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                Qty: {item.quantity} × ${Number(item.price).toFixed(2)}
                               </p>
                             </div>
                             <p className="text-sm font-medium text-gray-900">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              ${(Number(item.price) * item.quantity).toFixed(2)}
                             </p>
                           </div>
                         ))}
@@ -241,7 +241,7 @@ export default function OrdersPage() {
                       View Details
                     </Link>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900">${order.total.toFixed(2)}</span></p>
+                      <p className="text-sm text-gray-600">Total: <span className="font-bold text-gray-900">${Number(order.total).toFixed(2)}</span></p>
                     </div>
                   </div>
                 </div>

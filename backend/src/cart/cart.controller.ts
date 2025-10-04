@@ -13,9 +13,10 @@ import {
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import type { AddToCartDto, UpdateCartItemDto } from './cart.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 @Controller('cart')
+@UseGuards(OptionalJwtAuthGuard)
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
@@ -32,7 +33,7 @@ export class CartController {
     @Headers('session-id') sessionId?: string,
   ) {
     const userId = req.user?.id;
-    return this.cartService.addToCart(userId, sessionId, addToCartDto);
+    return this.cartService.addToCart(addToCartDto, userId, sessionId);
   }
 
   @Patch(':itemId')
@@ -43,7 +44,7 @@ export class CartController {
     @Headers('session-id') sessionId?: string,
   ) {
     const userId = req.user?.id;
-    return this.cartService.updateCartItem(userId, sessionId, itemId, updateCartItemDto);
+    return this.cartService.updateCartItem(itemId, updateCartItemDto, userId, sessionId);
   }
 
   @Delete(':itemId')
@@ -53,7 +54,7 @@ export class CartController {
     @Headers('session-id') sessionId?: string,
   ) {
     const userId = req.user?.id;
-    return this.cartService.removeFromCart(userId, sessionId, itemId);
+    return this.cartService.removeFromCart(itemId, userId, sessionId);
   }
 
   @Delete()

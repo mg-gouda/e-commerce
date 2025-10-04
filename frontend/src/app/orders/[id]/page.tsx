@@ -9,7 +9,7 @@ interface OrderItem {
   id: string;
   product_id: string;
   quantity: number;
-  price: number;
+  price: string | number;
   product: {
     id: string;
     name: string;
@@ -21,14 +21,14 @@ interface Payment {
   id: string;
   provider: string;
   status: string;
-  amount: number;
+  amount: string | number;
   created_at: string;
 }
 
 interface Order {
   id: string;
   status: string;
-  total: number;
+  total: string | number;
   shipping_address_line1: string;
   shipping_address_line2?: string;
   shipping_city: string;
@@ -209,7 +209,7 @@ export default function OrderDetailPage() {
                 {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
               </span>
               <p className="text-2xl font-bold text-gray-900 mt-2">
-                ${order.total.toFixed(2)}
+                ${Number(order.total).toFixed(2)}
               </p>
             </div>
           </div>
@@ -244,12 +244,12 @@ export default function OrderDetailPage() {
                         Quantity: {item.quantity}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Unit Price: ${item.price.toFixed(2)}
+                        Unit Price: ${Number(item.price).toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${(Number(item.price) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -259,7 +259,7 @@ export default function OrderDetailPage() {
               <div className="border-t border-gray-200 pt-4 mt-6">
                 <div className="flex justify-between text-lg font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${order.total.toFixed(2)}</span>
+                  <span>${Number(order.total).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -288,7 +288,7 @@ export default function OrderDetailPage() {
                             {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                           </span>
                           <p className="text-lg font-bold text-gray-900 mt-1">
-                            ${payment.amount.toFixed(2)}
+                            ${Number(payment.amount).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -327,7 +327,7 @@ export default function OrderDetailPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Items Total</span>
-                  <span className="font-medium text-gray-900">${order.total.toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">${Number(order.total).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
@@ -336,7 +336,7 @@ export default function OrderDetailPage() {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-bold text-gray-900">${order.total.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-gray-900">${Number(order.total).toFixed(2)}</span>
                   </div>
                 </div>
               </div>

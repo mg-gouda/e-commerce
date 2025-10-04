@@ -1,90 +1,116 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import AdminLayout from '@/components/admin/AdminLayout';
+
+interface OrderItem {
+  id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  product: {
+    id: string;
+    name: string;
+    image_url?: string;
+  };
+}
 
 interface Order {
   id: string;
-  orderNumber: string;
-  customer: string;
-  email: string;
-  total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  orderDate: string;
-  items: number;
+  status: string;
+  total: string | number;
+  shipping_address_line1: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_country: string;
+  payment_method: string;
+  created_at: string;
+  updated_at: string;
+  orderItems: OrderItem[];
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export default function OrdersManagement() {
-  const [orders] = useState<Order[]>([
-    {
-      id: '1',
-      orderNumber: 'ORD-2024-001248',
-      customer: 'John Doe',
-      email: 'john@example.com',
-      total: 299.98,
-      status: 'processing',
-      paymentStatus: 'paid',
-      orderDate: '2024-01-15T10:30:00Z',
-      items: 2
-    },
-    {
-      id: '2',
-      orderNumber: 'ORD-2024-001247',
-      customer: 'Jane Smith',
-      email: 'jane@example.com',
-      total: 1299.99,
-      status: 'shipped',
-      paymentStatus: 'paid',
-      orderDate: '2024-01-14T15:45:00Z',
-      items: 1
-    },
-    {
-      id: '3',
-      orderNumber: 'ORD-2024-001246',
-      customer: 'Bob Johnson',
-      email: 'bob@example.com',
-      total: 149.99,
-      status: 'pending',
-      paymentStatus: 'pending',
-      orderDate: '2024-01-14T09:20:00Z',
-      items: 1
-    },
-    {
-      id: '4',
-      orderNumber: 'ORD-2024-001245',
-      customer: 'Alice Brown',
-      email: 'alice@example.com',
-      total: 899.99,
-      status: 'delivered',
-      paymentStatus: 'paid',
-      orderDate: '2024-01-13T14:10:00Z',
-      items: 1
-    },
-    {
-      id: '5',
-      orderNumber: 'ORD-2024-001244',
-      customer: 'Charlie Wilson',
-      email: 'charlie@example.com',
-      total: 75.50,
-      status: 'cancelled',
-      paymentStatus: 'refunded',
-      orderDate: '2024-01-12T11:30:00Z',
-      items: 3
-    }
-  ]);
-
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await api.get('/orders/admin', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setOrders(response.data);
+    } catch (err: any) {
+      console.error('Error fetching orders:', err);
+      if (err.response?.status === 401) {
+        router.push('/login');
+      } else if (err.response?.status === 403) {
+        setError('Access denied. Admin privileges required.');
+      } else {
+        setError('Failed to fetch orders');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdating(orderId);
+    try {
+      const token = localStorage.getItem('token');
+      await api.patch(`/orders/${orderId}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update local state
+      setOrders(orders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+    } catch (err: any) {
+      console.error('Error updating order status:', err);
+      setError('Failed to update order status');
+    } finally {
+      setUpdating(null);
+    }
+  };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const orderNumber = `ORD-${order.id.slice(-8).toUpperCase()}`;
+    const matchesSearch = orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || order.paymentStatus === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
@@ -108,8 +134,20 @@ export default function OrdersManagement() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -131,6 +169,13 @@ export default function OrdersManagement() {
             </div>
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow mb-6 p-6">
@@ -238,7 +283,7 @@ export default function OrdersManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${order.total.toFixed(2)}
+                      ${Number(order.total).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
@@ -358,13 +403,13 @@ export default function OrdersManagement() {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Revenue</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  ${orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.total, 0).toFixed(0)}
+                  ${orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + Number(o.total), 0).toFixed(0)}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
